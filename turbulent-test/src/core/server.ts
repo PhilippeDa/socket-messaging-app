@@ -1,11 +1,47 @@
-import * as express from "express";
-import * as socket from "socket.io";
+import express from "express";
+import socket from "socket.io";
+import path from "path";
+import {sockets} from "./socket"
+import {Packet} from "../models/packet"
 
-const app = express();
-let http = require("http").Server(app);
-let io = require("socket.io")(http);
+export async function startServer(): Promise<express.Application> {
+ 
+    const app = express();
+    let http = require("http").Server(app);
+    let io = socket(http);
 
-io.on("connection", function(socket: any) {
-    console.log("a user connected");
-});
+    // we need some sort of a client otherwise its a bit boring.
+    app.get('/', function(req, res){
+        res.sendFile(path.resolve("./src/index.html"));
+    });
+
+    io.on("connection", async function(socket: any) {
+
+        socket.on('msg',(data) => {
+            console.log("we receive that",data);
+            const newPacket: Packet = {
+                socket,
+                msg: data.msg,
+                deliveryTime: data.deliveryTime
+            }
+
+            sockets.addPacket(newPacket);
+        });
+
+        socket.on('disconnect', function(){
+            console.log('user disconnected');
+          });
+
+
+        await sockets.addSocket(socket);       
+        console.log("a user connected");
+    }); 
+
+    const server = http.listen(3000, function() {
+        console.log("listening on *:3000");
+      });
+
+    return server;
+}
+
 
