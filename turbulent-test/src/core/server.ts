@@ -3,6 +3,8 @@ import socket from "socket.io";
 import path from "path";
 import {sockets} from "./socket"
 import {Packet} from "../models/packet"
+import * as _ from "lodash";
+import { looping } from "./loop";
 
 export async function startServer(): Promise<express.Application> {
  
@@ -20,12 +22,14 @@ export async function startServer(): Promise<express.Application> {
         socket.on('msg',(data) => {
             console.log("we receive that",data);
             const newPacket: Packet = {
-                socket,
+                socket:socket,
                 msg: data.msg,
                 deliveryTime: data.deliveryTime
             }
 
             sockets.addPacket(newPacket);
+
+            
         });
 
         socket.on('disconnect', function(){
@@ -37,11 +41,11 @@ export async function startServer(): Promise<express.Application> {
         console.log("a user connected");
     }); 
 
+    looping(io);
+
     const server = http.listen(3000, function() {
         console.log("listening on *:3000");
       });
-
+   
     return server;
 }
-
-
