@@ -33,7 +33,7 @@ class Sockets implements ISockets{
                     break;
                 }
             }
-            this.readyToSendPackets = this.packetList.splice(0,cut)
+            this.readyToSendPackets = this.packetList.splice(0,cut+1)
             
             return this.readyToSendPackets;
         }
