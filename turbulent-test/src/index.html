@@ -1,12 +1,14 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    
+    <title>Turbulent - test</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      .text {width: 30%; align-content: center; border: 2; padding: 10px; color:aqua}
+      form input {width: 90%; margin-right: .5%; margin-left: 0%; border: 2; padding: 10px; }
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
@@ -16,6 +18,9 @@
   <body>
     <ul id="messages"></ul>
     <form action="">
+      <h4 class="text">Epoch time (seconds since jan 1st 1970)</h4><input id="d" autocomplete="off" />
+      <h4 class="text">Message to send</h4>
+      
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
@@ -27,8 +32,9 @@
         var socket = io();
         $('form').submit(function(e){
           e.preventDefault(); // prevents page reloading
-          socket.emit('msg',{'msg':$('#m').val() });
+          socket.emit('msg',{'msg':$('#m').val(), 'deliveryTime': $('#d').val() });
           $('#m').val('');
+          $('#d').val('');
           return false;
         });
 

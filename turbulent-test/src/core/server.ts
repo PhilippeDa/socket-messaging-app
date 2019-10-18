@@ -24,7 +24,7 @@ export async function startServer(): Promise<express.Application> {
             const newPacket: Packet = {
                 socket:socket,
                 msg: data.msg,
-                deliveryTime: data.deliveryTime
+                deliveryTime: data.deliveryTime*1000
             }
 
             sockets.addPacket(newPacket);

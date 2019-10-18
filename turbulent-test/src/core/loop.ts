@@ -1,15 +1,24 @@
 import {sockets} from "./socket"
 import * as _ from "lodash";
+import {refreshInterval} from "../configs/refreshInterval"
+import { Packet } from "../models/packet";
+
+const readyToSendPackets: Packet[] = []
 
 function loop(io: SocketIO.Server) {
+    
+
     setInterval(() =>{
-        
-        const packet = sockets.getPacket();
-        if(!_.isNil(packet)){
-            io.emit('msg',packet.msg)
+       this.readyToSendPackets = sockets.getPackets();
+        if(!_.isNil(this.readyToSendPackets )){
+            const now = new Date().getTime()
+
+            this.readyToSendPackets .forEach( packet => {
+               setTimeout( () =>{ io.emit('msg',packet.msg) }, packet.deliveryTime-now,packet);
+            })
         }
         
-    }, 10000);
+    }, refreshInterval);
 }
 
 export let looping = loop;
