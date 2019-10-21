@@ -5,56 +5,90 @@ import * as _ from "lodash";
 import {refreshInterval} from "../configs/refreshInterval"
 
 interface ISockets {
+    weAlreadyTriedFetchingSavedPackets:boolean;
     socketList: socket.Socket[];
     packetList: Packet[];
     readyToSendPackets: Packet[];
-    addSocket(newSocket: socket.Socket):Promise<void>;
     getPackets():Packet[];
     addPacket(newPacket: Packet):Promise<void>;
+    retrieveSavedPackets():void;
+    savePacketsToFile():void;
 }
 
 class Sockets implements ISockets{
+    weAlreadyTriedFetchingSavedPackets=false;
     socketList: socket.Socket[] = [];
     packetList: Packet[] = [];
     readyToSendPackets: Packet[] = [];
 
+    retrieveSavedPackets(){
+        try{
+            const rawData:string = fs.readFileSync('savedPackets.json', "utf8");
+            this.packetList = JSON.parse(rawData);
+            return;
+        }catch(err){
+            throw err;
+        }
+    }
 
     getPackets(){
+        if(!this.weAlreadyTriedFetchingSavedPackets){
+            console.log("Trying to retrieve saved packets ...")
+            try{
+                this.retrieveSavedPackets();
+                this.weAlreadyTriedFetchingSavedPackets=true;
+                console.log("Retrieved saved packets succesfully!")
+            }catch(err){
+                console.log("no file to retrieve data from, but we tried!");
+                this.weAlreadyTriedFetchingSavedPackets=true;
+            }
+        }
+
         this.readyToSendPackets = [];
         if(this.packetList.length > 0){
-            const now: Date = new Date();
-            console.log("now time: ",now.getTime(),"     delivery time: ", this.packetList[0].deliveryTime);
-
+            const now: number = new Date().getTime();
+            console.log(`present time: ${Math.round(now/1000)} ... delivery time of next message ...  ${Math.round(this.packetList[0].deliveryTime/1000)}`);
             let cut=0;
+            let diff: number=0;
+            let weFoundSomethingToSend=false;
             for(let i = 0; i < this.packetList.length;i++){
-                if(this.packetList[i].deliveryTime - now.getTime() <= refreshInterval ){
+                diff = this.packetList[i].deliveryTime - now;
+                if(diff <= refreshInterval){
                     cut = i;
+                    weFoundSomethingToSend=true;
                 }else {
                     break;
                 }
             }
-            this.readyToSendPackets = this.packetList.splice(0,cut+1)
-            
+            if(weFoundSomethingToSend){
+                this.readyToSendPackets = this.packetList.splice(0,cut+1)
+                this.savePacketsToFile();
+            }
+        
             return this.readyToSendPackets;
         }
         return;
     }
 
     async addPacket(newPacket: Packet){
-        if(this.packetList.length < 1){
-            this.packetList.push(newPacket);
-        } else {
-            this.packetList.splice(_.sortedIndexBy(this.packetList, newPacket, 'deliveryTime'), 0, newPacket);
-            console.log(this.packetList);
+        if(this.weAlreadyTriedFetchingSavedPackets){
+            if(this.packetList.length < 1){
+                this.packetList.push(newPacket);
+            } else {
+                this.packetList.splice(_.sortedIndexBy(this.packetList, newPacket, 'deliveryTime'), 0, newPacket);
+                console.log("message added to long term list ... packets so far => :",this.packetList);
+            }
+            await this.savePacketsToFile();
+            return;
         }
-        return;
+        console.log("dont send msg while the server is starting up ... ")
     }
 
-
-    async addSocket(newSocket: socket.Socket){
-        this.socketList.push(newSocket);
+    async savePacketsToFile(){
+        let file: fs.WriteStream = fs.createWriteStream('savedPackets.json');
+        await file.write(JSON.stringify(this.packetList));
+        file.end();
     }
-
 }
 
 

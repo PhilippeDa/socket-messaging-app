@@ -1,8 +1,9 @@
-import  {startServer}  from './core/server'
+import  {startServer}  from './core/server';
 
 (async function() {
     try{
-        await startServer()
+        await startServer();
+
     }catch(err){
         console.log("problem launching server...");
     }

@@ -1,0 +1,25 @@
+==== how to install ====
+1. install the latest lts node version 
+2. install typescript globally before doing npm install
+3. npm install
+4. npm start
+
+
+=== how to run test ===
+2. npm test
+
+
+==== how to use ====
+1. access localhost:3000 on your browser
+2. type a time in second since jan 1st 1970 (UNIX epoch) and a nice message
+3. open as many client tab as you like
+4. receive the messages when they are due (yay!)
+
+5. optional ( ctrl+c the server while there are still messages in the queue)
+6. receive the messages as if the server never was closed! (yay!)
+
+
+=== pro tip ===
+send a message a time 0 so the terminal will send you the time
+of the server. copy it and add a few seconds in the client so you dont
+have to figure out whats the current time.

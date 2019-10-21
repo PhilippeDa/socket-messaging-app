@@ -18,27 +18,18 @@ export async function startServer(): Promise<express.Application> {
     });
 
     io.on("connection", async function(socket: any) {
-
-        socket.on('msg',(data) => {
-            console.log("we receive that",data);
+        socket.on('msg',async (data) => {
+            console.log("Message received ... :",data);
             const newPacket: Packet = {
-                socket:socket,
                 msg: data.msg,
                 deliveryTime: data.deliveryTime*1000
             }
-
-            sockets.addPacket(newPacket);
-
-            
+           await sockets.addPacket(newPacket);
         });
 
         socket.on('disconnect', function(){
-            console.log('user disconnected');
-          });
-
-
-        await sockets.addSocket(socket);       
-        console.log("a user connected");
+            console.log('user disconnected: :sadface:');
+        });
     }); 
 
     looping(io);
